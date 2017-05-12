@@ -1,0 +1,127 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Cloudpacity backup purge environment creation and deployment script
+#
+# Parameters section
+#
+Parameters:
+#
+  S3CodeBucket:
+    Type: String
+    Description: The name of the bucket where the code resides. It needs to exist!
+    Default: ''
+
+  S3CodeKey:
+    Type: String
+    Description: The key for the code jar file in the S3 bucket
+    Default: 'cloudpacity-backup-purge-0.12.6.jar'
+ 
+  BackupPurgeLambdaFunctionName:
+    Type: String
+    Description: The name of the lambda function for purging AMIs and Snapshot beyond their retention time
+    Default: 'CloudpacityEC2BackupPurge'   
+    
+  BackupPurgeRoleName:
+    Type: String
+    Description: The name IAM role for the purge Lambda functions
+    Default: 'CP_EC2BackupPurge_Role'  
+    
+  NotificationEmail:
+    Type: String
+    Description: The email address for notifications
+  
+    
+Resources: 
+#
+  CPBackupPurgeRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+        RoleName: !Ref "BackupPurgeRoleName"
+        AssumeRolePolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+                -
+                 Effect: Allow
+                 Principal: 
+                  Service: 
+                    - "lambda.amazonaws.com"
+                 Action: sts:AssumeRole
+        ManagedPolicyArns:
+            - arn:aws:iam::aws:policy/ReadOnlyAccess
+            - arn:aws:iam::aws:policy/AWSLambdaInvocation-DynamoDB
+            - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        Path: "/"
+#
+  CPBackupPurgeRolePolicies:
+    Type: AWS::IAM::Policy
+    DependsOn: CPBackupPurgeRole
+    Properties:
+      PolicyName: root
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - 
+            Effect: Allow
+            Action: 
+              - "lambda:InvokeFunction"
+              - "lambda:InvokeAsync"
+            Resource: !Join [ '', ['arn:aws:lambda::',  !Ref "AWS::AccountId", ':function:', !Ref "BackupPurgeLambdaFunctionName"] ]
+          - 
+            Effect: Allow
+            Action: 
+              - "dynamodb:DescribeStream"
+              - "dynamodb:GetRecords"
+              - "dynamodb:GetShardIterator"
+              - "dynamodb:ListStreams"
+            Resource: !Join [ '', ['arn:aws:dynamodb::',  !Ref "AWS::AccountId", ':table/CloudpacityEC2BackupPurge/stream/*'] ]
+          - 
+            Effect: Allow
+            Action: 
+              - "logs:CreateLogGroup"
+              - "logs:CreateLogStream"
+              - "logs:PutLogEvents"
+              - "ec2:StopInstances"
+              - "ec2:StartInstances"
+              - "ec2:CopySnapshot"
+              - "ec2:DeleteSnapshot"
+              - "ec2:CreateImage"
+              - "ec2:DeregisterImage"
+              - "ec2:CreateSnapshot"
+              - "ec2:CreateTags"
+              - "s3:GetObject"
+              - "s3:PutObject"
+              - "sns:Publish"
+            Resource: "*"
+      Roles:
+      - Ref: CPBackupPurgeRole
+#
+  CloudpacityBackupPurgeSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: !Ref "BackupPurgeLambdaFunctionName"
+      Subscription:
+        -
+          Endpoint: !Ref NotificationEmail
+          Protocol: email
+#
+  CreateEC2BackupPurgeFunction:
+    Type: "AWS::Lambda::Function"
+    DependsOn: 
+      - CPBackupPurgeRole
+      - CloudpacityBackupPurgeSNSTopic
+    Properties:
+      FunctionName: !Ref "BackupPurgeLambdaFunctionName"
+      Description: "AMI/snapshots Purge"
+      Handler: "com.cloudpacity.aws.purge.lambda.CPBackupPurgeLambda::handleRequest"
+      Role: !Join [ '', ['arn:aws:iam::',  !Ref "AWS::AccountId", ':role/', !Ref 'BackupPurgeRoleName'] ]
+      Code:
+        S3Bucket: !Ref S3CodeBucket
+        S3Key: !Ref S3CodeKey
+      Runtime: "java8"
+      MemorySize: "1024"
+      Timeout: "300"
+      Environment:
+        Variables:
+          "SnsArn": !Ref CloudpacityBackupPurgeSNSTopic
+
+
+
