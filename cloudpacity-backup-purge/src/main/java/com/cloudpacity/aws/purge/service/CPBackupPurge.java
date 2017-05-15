@@ -6,10 +6,12 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.services.ec2.model.DeleteSnapshotResult;
 import com.amazonaws.services.ec2.model.DeregisterImageResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Image;
@@ -59,7 +61,7 @@ public class CPBackupPurge {
     	
     	processBackupPurge(backupPurgeRequest);
     	
-    	
+    	logger.logSummary("Backup Purge Completed Successfully");
     	return returnMessage;
     }
     
@@ -74,8 +76,10 @@ public class CPBackupPurge {
 
     	
     	List<Filter> filterTagValues = populateFilterTags(backupPurgeRequest);
+    	Collection<String> owners = new ArrayList<String>();
+    	owners.add("self");
     	
-    	List<Image> images = imageEntity.getImagesForFilter(filterTagValues);
+    	List<Image> images = imageEntity.getImagesForFilter(filterTagValues, owners);
     	
 		for (Image image : images) {
 			processImage(imageEntity, image);
@@ -130,6 +134,8 @@ public class CPBackupPurge {
 			DeregisterImageResult result = imageEntity.delete(image.getImageId());
 			this.logger.log("Image: '" + imageName + "' id: '" + image.getImageId() + "' was deleted!  Create date: '" +image.getCreationDate()+
 					        "' Retain days: '" + retainDays + "' " + System.getProperty("line.separator") + result.getSdkResponseMetadata());
+			this.logger.logSummary("Image: '" + imageName + "' id: '" + image.getImageId() + "' was deleted!  Create date: '" +image.getCreationDate()+
+					                "' Retained for: '" + retainDays + "' days" );
 		}
 	}
     
@@ -169,7 +175,7 @@ public class CPBackupPurge {
 		ZonedDateTime purgeDateTime = createdDateTime.plusDays(retainDays);
 		
 		if (ChronoUnit.DAYS.between(purgeDateTime, currDateTime) > 0) {
-			DeregisterImageResult result = imageEntity.delete(snapshot.getSnapshotId());
+			DeleteSnapshotResult result = imageEntity.deleteSnapshot(snapshot.getSnapshotId());
 			this.logger.log("Snapshot: '" + snapshotName + "' id: '" + snapshot.getSnapshotId() + "' was deleted!  Create date: '" + creationTimestampString +
 					        "' Retain days: '" + retainDays + "' " + System.getProperty("line.separator") + result.getSdkResponseMetadata());
 		}

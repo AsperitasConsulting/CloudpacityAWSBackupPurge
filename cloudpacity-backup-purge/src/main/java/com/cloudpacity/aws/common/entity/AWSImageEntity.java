@@ -4,6 +4,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -447,12 +448,15 @@ public class AWSImageEntity extends AWSObjectEntity
 		return imageList.get(0);
 	}
 	
-    public List<Image> getImagesForFilter(List<Filter> filters)
+    public List<Image> getImagesForFilter(List<Filter> filters,Collection<String> owners)
     {
         Validate.notNull(filters, "The filter given is null!", new Object[0]);
 
         DescribeImagesRequest request = new DescribeImagesRequest();
         request.setFilters(filters);
+        if (owners != null && owners.size() >0) {
+        	request.setOwners(owners);
+        }
 
         DescribeImagesResult result =  ec2Client.describeImages();
         return result.getImages();

@@ -29,6 +29,10 @@ Parameters:
     Type: String
     Description: The email address for notifications
   
+  Schedule:
+    Type: String
+    Description: The schedule for the function. Format rate(x minutes), rate(x hours), rate(x days), cron(<mins> <hours> <day of month> <month> <day of week> <year>) e.g. cron(0 12 ? * SUN-SAT *) represents everyday at noon
+    Default: 'cron(0 1 ? * SUN-SAT *)'   
     
 Resources: 
 #
@@ -122,6 +126,30 @@ Resources:
       Environment:
         Variables:
           "SnsArn": !Ref CloudpacityBackupPurgeSNSTopic
-
+#
+  ScheduledRule: 
+    Type: "AWS::Events::Rule"
+    Properties: 
+      Description: "ScheduledRule"
+      ScheduleExpression: !Ref "Schedule"
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: 
+            Fn::GetAtt: 
+              - "CreateEC2BackupPurgeFunction"
+              - "Arn"
+          Id: "BackupPurgeTargetFunction"
+  PermissionForEventsToInvokeLambda: 
+    Type: "AWS::Lambda::Permission"
+    Properties: 
+      FunctionName: 
+        Ref: "CreateEC2BackupPurgeFunction"
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: 
+        Fn::GetAtt: 
+          - "ScheduledRule"
+          - "Arn"
 
 
