@@ -56,8 +56,8 @@ public class AWSInstanceEntity extends AWSObjectEntity
     public static final String SHUTTING_DOWN_STATE = "shutting-down";
     public static final String TERMINATED_STATE = "terminated";
     public static final String BACKUP_STRATEGY_AMI_CONST = "AMI";
-    public static final String BACKUP_STRATEGY_SNAPSHOT_RUNNING_CONST = "SnaptshotRunning";
-    public static final String BACKUP_STRATEGY_SNAPSHOT_STOPPED_CONST = "SnaptshotStopped";
+    public static final String BACKUP_STRATEGY_SNAPSHOT_RUNNING_CONST = "SnapshotRunning";
+    public static final String BACKUP_STRATEGY_SNAPSHOT_STOPPED_CONST = "SnapshotStopped";
     
     protected AmazonEC2 ec2Client;
     

@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.cloudpacity.aws.backup</groupId>
   <artifactId>cloudpacity-backup-purge</artifactId>
-  <version>0.12.9</version>
+  <version>0.12.10</version>
   <name>cloudpacity-backup-purge</name>
   <packaging>jar</packaging>
   <url>http://maven.apache.org</url>
