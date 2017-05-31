@@ -23,7 +23,7 @@ Parameters:
   BackupPurgeRoleName:
     Type: String
     Description: The name IAM role for the purge Lambda functions
-    Default: 'CP_EC2BackupPurge_Role'  
+    Default: 'CP.EC2BackupPurge.Role'  
     
   NotificationEmail:
     Type: String

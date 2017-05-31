@@ -1,0 +1,20 @@
+QuickStart Installation
+
+1.	Upload the project jar file into an AWS S3 bucket of your choosing.  It can be found in the project root directory (cloudpacity-backup-purge-<version>.jar): https://github.com/AsperitasConsulting/CloudpacityAWSBackupPurge/tree/master/cloudpacity-backup-purge
+
+2.	Download the AWS CloudFormation script in the scripts directory: https://github.com/AsperitasConsulting/CloudpacityAWSBackupPurge/blob/master/cloudpacity-backup-purge/scripts/CloudpacityBackupPurgeServiceCreation-CF.yaml
+
+3.	Run AWS CloudFormation script CloudpacityBackupServiceCreation-CF.yaml and enter the following parameters:
+    BackupPurgeLambdaFunctionName – The name you give the Lambda function for the Backup Purge job
+
+    BackupPurgeRoleName – the name of the role that will be created for the Backup Purge Lambda function
+ 
+    NotificationEmail – the email to be notified when the job completes
+
+    S3CodeBucket – the bucket where the Backup Purge jar is located
+
+    S3CodeKey – the filename of the jar in the bucket  e.g. cloudpacity-backup-purge-<version>.jar
+
+    Schedule – the schedule on which the Backup job should be run.  Format rate(x minutes), rate(x hours), rate(x days), cron(<mins> <hours> <day of month> <month> <day of week> <year>) e.g. cron(0 12 ? * SUN-SAT *) represents everyday at noon
+
+
