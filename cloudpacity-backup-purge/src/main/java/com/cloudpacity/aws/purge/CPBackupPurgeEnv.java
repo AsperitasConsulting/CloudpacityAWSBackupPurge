@@ -23,6 +23,63 @@ import com.cloudpacity.aws.common.CPCommonEnv;
  *
  */
 public class CPBackupPurgeEnv extends CPCommonEnv{
+	
+    public static final String ENV_VAR_TIME_ZONE = "TimeZone";
+    public static final String ENV_VAR_FILTER1_TAG_NAME = "Filter1TagName";
+    public static final String ENV_VAR_FILTER1_TAG_VALUE = "Filter1TagValue";
+    public static final String ENV_VAR_FILTER2_TAG_NAME = "Filter2TagName";
+    public static final String ENV_VAR_FILTER2_TAG_VALUE = "Filter2TagValue";
+    public static final String ENV_VAR_FILTER3_TAG_NAME = "Filter3TagName";
+    public static final String ENV_VAR_FILTER3_TAG_VALUE = "Filter3TagValue"; 
 
-
+    public static String getDefaultTimeZone()
+    {
+        String defaultTimeZone = System.getenv(ENV_VAR_TIME_ZONE);
+        if(StringUtils.isEmpty(defaultTimeZone))
+            return DEFAULT_TIME_ZONE;
+        else
+            return defaultTimeZone;
+    }
+    
+    public static int getDefaultRetentionDays()
+    {
+		String defaultRetentionDaysString = System.getenv(DEFAULT_RETAIN_DAYS_TAG);
+		if (StringUtils.isEmpty(defaultRetentionDaysString)) {
+			return DEFAULT_RETENTION_DAYS;
+		}
+		try {
+			return new Integer(defaultRetentionDaysString);
+		}
+		catch (NumberFormatException nfe) {
+			return DEFAULT_RETENTION_DAYS;
+		}
+    }
+    
+    public static String getFilter1TagName() {
+		return System.getenv(ENV_VAR_FILTER1_TAG_NAME);
+    }
+    
+    public static String getFilter1TagValue() {
+		return System.getenv(ENV_VAR_FILTER1_TAG_VALUE);
+    }
+    
+    public static String getFilter2TagName() {
+		return System.getenv(ENV_VAR_FILTER2_TAG_NAME);
+    }
+    
+    public static String getFilter2TagValue() {
+		return System.getenv(ENV_VAR_FILTER2_TAG_VALUE);
+    }
+    
+    public static String getFilter3TagName() {
+		return System.getenv(ENV_VAR_FILTER3_TAG_NAME);
+    }
+    
+    public static String getFilter3TagValue() {
+		return System.getenv(ENV_VAR_FILTER3_TAG_VALUE);
+    }
+    
+   
+    
+    
 }

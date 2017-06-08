@@ -1,5 +1,9 @@
 package com.cloudpacity.aws.purge.lambda;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -7,7 +11,9 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.cloudpacity.aws.common.entity.AWSSNSEntity;
 import com.cloudpacity.aws.common.util.CPLogger;
+import com.cloudpacity.aws.purge.CPBackupPurgeEnv;
 import com.cloudpacity.aws.purge.pojo.BackupPurgeRequest;
 import com.cloudpacity.aws.purge.service.CPBackupPurge;
 
@@ -42,6 +48,7 @@ public class CPBackupPurgeLambda  implements RequestHandler<BackupPurgeRequest, 
     public String handleRequest(BackupPurgeRequest request, Context context)
     {
     	try {
+    		String returnCode = "";
 	        logger = new CPLogger(context.getLogger());
 	        logger.log("BEGIN BACKUP PROCESS");
 
@@ -53,8 +60,17 @@ public class CPBackupPurgeLambda  implements RequestHandler<BackupPurgeRequest, 
 	        validateBackupPurgeRequest(request, context);
 	        logger.log(request.toString());
 	        
+	        populateBackupRequest(request, context);
+	        
 	        CPBackupPurge backupPurge = new CPBackupPurge(logger, awsCredentials);
-	        return backupPurge.invoke(request);
+	        returnCode = backupPurge.invoke(request);
+	        
+	        // if complete, send message to SNS
+	        if (CPBackupPurge.RETURN_CODE_COMPLETE.equalsIgnoreCase(returnCode)) {
+	        	AWSSNSEntity.postMessage(logger.getCompoundMessages(), this.logger);
+	        }
+	        
+	        return returnCode;
 		}
 	   	catch (Throwable e){
 	   		logger.log("Exception in EC2backup.handleRequest!");
@@ -70,7 +86,33 @@ public class CPBackupPurgeLambda  implements RequestHandler<BackupPurgeRequest, 
         Validate.notNull(request, "The backup request is null!", new Object[0]);
         Validate.notNull(context, "The Lambda context is null!", new Object[0]);
 
+    }
+    
+    private BackupPurgeRequest populateBackupRequest(BackupPurgeRequest request, Context context)
+    {
+        Validate.notNull(request, "The backup request is null!", new Object[0]);
+        Validate.notNull(context, "The Lambda context is null!", new Object[0]);
+        BackupPurgeRequest backupPurgeRequest = new BackupPurgeRequest();
+        ZoneId zoneCDT = ZoneId.of(CPBackupPurgeEnv.getDefaultTimeZone());
+        ZonedDateTime iterationStartDateTime = ZonedDateTime.now(zoneCDT);
         
+    	// Current Lambda Req Id
+        backupPurgeRequest.setCurrentLambdaRequestId(context.getAwsRequestId());
+        
+        // Request Start Time
+        if(StringUtils.isEmpty(request.getRequestStartTimeString()))
+        	backupPurgeRequest.setRequestStartTime(iterationStartDateTime);
+        else
+        	backupPurgeRequest.setRequestStartTime(request.getRequestStartTime());
+        
+        // Originating Lambda Req Id
+        if(StringUtils.isEmpty(request.getOriginatingLambdaRequestId()))
+        	backupPurgeRequest.setOriginatingLambdaRequestId(context.getAwsRequestId());
+        else
+        	backupPurgeRequest.setOriginatingLambdaRequestId(request.getOriginatingLambdaRequestId());
+        	
+        
+        return backupPurgeRequest;
     }
 
 }

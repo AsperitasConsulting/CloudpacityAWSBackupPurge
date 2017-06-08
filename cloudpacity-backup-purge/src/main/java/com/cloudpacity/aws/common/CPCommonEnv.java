@@ -30,8 +30,10 @@ import com.amazonaws.regions.Regions;
  */
 public class CPCommonEnv {
 
-	
+    public static final String UTC_TIME_ZONE = "UTC"; 
+
     public static final int DEFAULT_ACTION_PAUSE_SECS = 30;
+    public static final int DEFAULT_RETENTION_DAYS = 365;    
     public static final int DEFAULT_MAX_RECURSIVE_CALLS = 40;
     public static final int DEFAULT_MAX_RUN_MINUTES = 20;
     public static final int DEFAULT_DB_RETENTION_DAYS = 14;	
@@ -47,6 +49,7 @@ public class CPCommonEnv {
     public static final String DEFAULT_DEVICE_TAG = "Device";
     public static final String DEFAULT_IMAGE_ID_TAG = "ImageId";
     public static final String DEFAULT_BACKUP_STRATEGY_TAG = "BackupStrategy";
+    public static final String ENV_VAR_SNS_ARN = "SnsArn";
     
     public static final String ENV_VAR_OVERRIDE_NAME_TAG = "NameTag";
     public static final String DEFAULT_NAME_TAG = "Name";
@@ -62,6 +65,15 @@ public class CPCommonEnv {
             return retainDaysTag;
     }
     
+    
+    public static String getSNSARN()
+    {
+        String snsARN =  System.getenv(ENV_VAR_SNS_ARN);
+        if(StringUtils.isEmpty(snsARN))
+            return "";
+        else
+            return snsARN;
+    }
 
     public String getNameTag()
     {
@@ -88,4 +100,6 @@ public class CPCommonEnv {
 		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern(DEFAULT_DATE_FORMAT);
 		return currentDatetime.format(dateFormatter);
     }
+    
+
 }

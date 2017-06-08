@@ -64,6 +64,7 @@ import com.cloudpacity.aws.common.util.CPLogger;
 public class AWSImageEntity extends AWSObjectEntity
 {
     public static final int DEFAULT_IMAGE_WAIT_SECS = 60;
+    public static final String AMI_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSX";
 
     private AWSCredentials awsCredentials;
     private CPCommonEnv env;
@@ -458,7 +459,7 @@ public class AWSImageEntity extends AWSObjectEntity
         	request.setOwners(owners);
         }
 
-        DescribeImagesResult result =  ec2Client.describeImages();
+        DescribeImagesResult result =  ec2Client.describeImages(request);
         return result.getImages();
     }
 
