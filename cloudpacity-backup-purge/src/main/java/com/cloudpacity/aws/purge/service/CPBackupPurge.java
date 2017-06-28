@@ -149,7 +149,6 @@ public class CPBackupPurge {
 		
 		ZonedDateTime createdDateTime = null;
 		Integer retainDays = null;
-		int defaultRetainDays = CPBackupPurgeEnv.getDefaultRetentionDays();
 		
 		// get the creation timestamp from a tag
 		String creationTimestampString = AWSImageEntity.getTagValueFromList(CPBackupPurgeEnv.DEFAULT_CREATION_TIMESTAMP_TAG, image.getTags(), "");
